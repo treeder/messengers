@@ -27,6 +27,7 @@ type IncomingMessage interface {
 	// Cmd the first value in the incoming message, minus the slash
 	Cmd() string
 	Command() string
+	IsSlashCommand() bool
 
 	FullText() string
 	// Split the incoming command split

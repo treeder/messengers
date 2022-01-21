@@ -3,19 +3,15 @@ package discord
 import (
 	"context"
 
-	"github.com/bwmarrin/discordgo"
-	"github.com/treeder/gotils/v2"
+	"github.com/bsdlp/discord-interactions-go/interactions"
 	"github.com/treeder/messengers"
 )
 
 type InMsg struct {
-	Msg     *discordgo.Message
-	// sess    *discordgo.Session
-	cmd     string
-	split   []string
-	channel *discordgo.Channel
-	ctx     context.Context
-	embed   *discordgo.MessageEmbed
+	Msg   interactions.Data
+	cmd   string
+	split []string
+	ctx   context.Context
 }
 
 func (m *InMsg) ID() string {
@@ -25,6 +21,10 @@ func (m *InMsg) ID() string {
 func (m *InMsg) Command() string {
 	return m.cmd
 }
+func (m *InMsg) IsSlashCommand() bool {
+	return true // always a slash command
+}
+
 func (m *InMsg) TeamID() string {
 	return m.Msg.GuildID
 }
@@ -33,13 +33,13 @@ func (m *InMsg) ChatID() string {
 }
 
 func (m *InMsg) FromID() string {
-	return m.Msg.Author.ID
+	return m.Msg.Member.User.ID
 }
 func (m *InMsg) FromUsername() string {
-	return m.Msg.Author.String()
+	return m.Msg.Member.User.Username
 }
 func (m *InMsg) FullText() string {
-	return m.Msg.Content
+	return "NO IDEA" //m.Msg.Content
 }
 func (m *InMsg) Cmd() string {
 	return m.Command()
@@ -48,22 +48,24 @@ func (m *InMsg) Split() []string {
 	return m.split
 }
 func (m *InMsg) IsPrivate() bool {
-	var err error
-	if m.channel == nil {
-		m.channel, err = m.sess.Channel(m.Msg.ChannelID)
-		if err != nil {
-			if m.ctx == nil {
-				m.ctx = context.TODO()
-			}
-			gotils.LogBeta(context.TODO(), "error", "discord error getting channel", err)
-			return false
-		}
-	}
-	return m.channel.Type == discordgo.ChannelTypeDM
+	return false
+	// var err error
+	// if m.channel == nil {
+	// 	m.channel, err = m.sess.Channel(m.Msg.ChannelID)
+	// 	if err != nil {
+	// 		if m.ctx == nil {
+	// 			m.ctx = context.TODO()
+	// 		}
+	// 		gotils.LogBeta(context.TODO(), "error", "discord error getting channel", err)
+	// 		return false
+	// 	}
+	// }
+	// m.Msg.ChannelID
+	// return m.channel.Type == discordgo.ChannelTypeDM
 }
 
 func (m *InMsg) Mention() string {
-	return m.Msg.Author.Mention()
+	return m.Msg.Member.User.Username
 }
 
 // ReplyToMsgID always returns "" since Discord doesn't have replies

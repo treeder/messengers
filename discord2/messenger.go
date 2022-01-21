@@ -1,9 +1,11 @@
 package discord
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -16,8 +18,11 @@ import (
 	"github.com/treeder/messengers/models"
 )
 
+const (
+	apiBaseURL = "https://discord.com/api/v9"
+)
+
 type DiscordMessenger struct {
-	sess             *discordgo.Session
 	ClientID         string
 	PublicKey        string
 	decodedPublicKey []byte
@@ -31,7 +36,7 @@ func (mess *DiscordMessenger) ForOrg(oauthToken string) messengers.Messenger {
 	return &newM
 }
 func (m *DiscordMessenger) Close() {
-	m.sess.Close()
+	// m.sess.Close()
 }
 
 func (m *DiscordMessenger) Name() string {
@@ -49,20 +54,47 @@ func (m *DiscordMessenger) ChatInfo(ctx context.Context, in messengers.IncomingM
 }
 
 func (m *DiscordMessenger) SendMsg(ctx context.Context, in messengers.IncomingMessage, text string, opts messengers.SendOpts) (messengers.Message, error) {
-	return m.SendMsgTo(ctx, in.ChatID(), text, opts)
+	gotils.L(ctx).Info().Println("discord.SendMsg")
+	response := &interactions.InteractionResponse{
+		Type: interactions.ChannelMessageWithSource,
+		Data: &interactions.InteractionApplicationCommandCallbackData{
+			Content: text,
+		},
+	}
+
+	msg := in.(*InMsg)
+
+	var responsePayload bytes.Buffer
+	err := json.NewEncoder(&responsePayload).Encode(response)
+	if err != nil {
+		gotils.L(ctx).Error().Printf("error encoding json: %v", err)
+		// http.Error(w, "error encoding json", http.StatusInternalServerError)
+		return msg, err
+	}
+	_, err = http.Post(msg.Msg.ResponseURL(), "application/json", &responsePayload)
+	if err != nil {
+		gotils.L(ctx).Error().Printf("error writing pong: %v", err)
+		// http.Error(w, "error responding", http.StatusInternalServerError)
+		return msg, err
+	}
+	return msg, nil
+	// return m.SendMsgTo(ctx, in.ChatID(), text, opts)
 }
 
 func (m *DiscordMessenger) SendMsgTo(ctx context.Context, chatID, text string, opts messengers.SendOpts) (messengers.Message, error) {
-	if opts == nil {
-		opts = messengers.SendOpts{}
-	}
-	embed := m.makeEmbed(text, opts)
-	m2, err := m.sess.ChannelMessageSendEmbed(chatID, embed)
-	if err != nil {
-		return nil, gotils.C(ctx).Errorf("error sending message:", err)
-	}
-	// in2 := in.(*InMsg)
-	return &InMsg{Msg: m2, sess: m.sess, embed: embed}, nil
+	gotils.L(ctx).Info().Println("discord.SendMsgTo")
+
+	// if opts == nil {
+	// 	opts = messengers.SendOpts{}
+	// }
+	// embed := m.makeEmbed(text, opts)
+	// m2, err := m.sess.ChannelMessageSendEmbed(chatID, embed)
+	// if err != nil {
+	// 	return nil, gotils.C(ctx).Errorf("error sending message:", err)
+	// }
+	// // in2 := in.(*InMsg)
+	// return &InMsg{Msg: m2, sess: m.sess, embed: embed}, nil
+	return nil, errors.New("SendMsgTo not implemented")
 }
 
 func (m *DiscordMessenger) SendMsgToUser(ctx context.Context, su *models.ServiceUser, text string, opts messengers.SendOpts) (messengers.Message, error) {
@@ -105,37 +137,44 @@ func (m *DiscordMessenger) EditMsg(ctx context.Context, in messengers.Message, t
 	}
 	in2 := in.(*InMsg)
 	// m2, err := m.sess.ChannelMessageEdit(in.ChatID(), in2.Msg.ID, text)
-	embed := in2.embed
-	if embed == nil {
-		embed = m.makeEmbed(text, opts)
-	} else {
-		embed.Description = text
+	// embed := in2.embed
+	// if embed == nil {
+	// 	embed = m.makeEmbed(text, opts)
+	// } else {
+	// 	embed.Description = text
+	// }
+	// m2, err := m.sess.ChannelMessageEditEmbed(in.ChatID(), in2.Msg.ID, embed)
+	// if err != nil {
+	// 	return nil, gotils.C(ctx).Errorf("error editing message:", err)
+	// }
+
+	editMsg := &interactions.InteractionResponse{
+		Type: interactions.ChannelMessageWithSource,
+		Data: &interactions.InteractionApplicationCommandCallbackData{
+			Content: text,
+		},
 	}
-	m2, err := m.sess.ChannelMessageEditEmbed(in.ChatID(), in2.Msg.ID, embed)
+	resp := &interactions.Data{}
+	err := gotils.PatchJSON(fmt.Sprintf("%v/webhooks/%v/%v/messages/@original", apiBaseURL, m.ClientID, in2.Msg.Token), editMsg, resp)
 	if err != nil {
-		return nil, gotils.C(ctx).Errorf("error editing message:", err)
+		return in, gotils.C(ctx).Errorf("Error in PatchJSON: %w", err)
 	}
-	return &InMsg{Msg: m2, sess: m.sess}, nil
+	return in2, nil
 }
 
 func (m *DiscordMessenger) EditMsg2(ctx context.Context, chatID, msgID, text string, opts messengers.SendOpts) (messengers.Message, error) {
-	min, err := m.sess.ChannelMessage(chatID, msgID)
+	editMsg := &interactions.InteractionResponse{
+		Type: interactions.ChannelMessageWithSource,
+		Data: &interactions.InteractionApplicationCommandCallbackData{
+			Content: text,
+		},
+	}
+	resp := &interactions.Data{}
+	err := gotils.PatchJSON(fmt.Sprintf("%v/webhooks/%v/%v/messages/@original", apiBaseURL, m.ClientID, msgID), editMsg, resp)
 	if err != nil {
-		return nil, err
+		return nil, gotils.C(ctx).Errorf("Error in PatchJSON: %w", err)
 	}
-
-	// we're always using embeds right now in discord... so:
-	embed := min.Embeds[0]
-	embed.Description = text
-	in2 := &InMsg{
-		Msg:   min,
-		embed: embed,
-	}
-	m2, err := m.sess.ChannelMessageEditEmbed(in2.ChatID(), in2.Msg.ID, embed)
-	if err != nil {
-		return nil, gotils.C(ctx).Errorf("error editing message 2:", err)
-	}
-	return &InMsg{Msg: m2, sess: m.sess}, nil
+	return &InMsg{}, nil
 }
 
 func (m *DiscordMessenger) MentionBot() string {
@@ -184,7 +223,7 @@ func (mess *DiscordMessenger) AddHandler(ctx context.Context, h messengers.Messa
 func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx = gotils.With(ctx, "messenger", mess.Name())
-	fmt.Println("DISCORD YOOO")
+	fmt.Println("DISCORD2 YOOO")
 	// from: https://github.com/bsdlp/discord-interactions-go/blob/main/interactions/verify_example_test.go
 	verified := interactions.Verify(r, ed25519.PublicKey(mess.decodedPublicKey))
 	if !verified {
@@ -203,7 +242,7 @@ func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Req
 	}
 
 	// respond to ping
-	gotils.L(ctx).Info().Println("data.Type:", data.Type, data.Data.Name)
+	gotils.L(ctx).Info().Println("data.Type:", data.Type, data.Data.Name, data.Data.Options)
 	if data.Type == interactions.Ping {
 		_, err := w.Write([]byte(`{"type":1}`))
 		if err != nil {
@@ -213,20 +252,40 @@ func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Req
 		}
 		return
 	}
+	cmd := data.Data.Name
+	tsplit := []string{}
+	if len(data.Data.Options) > 0 {
+		t := data.Data.Options[0].Value.(string)
+		t = "/" + data.Data.Name + " " + t
+		cmd, tsplit = messengers.ParseCommand(ctx, t)
+	}
+	if cmd == "balance2" {
+		cmd = "balance"
+	}
+	msg := &InMsg{
+		Msg:   data,
+		cmd:   cmd,
+		split: tsplit,
+		ctx:   ctx,
+	}
+	for _, h := range mess.MessageHandlers {
+		h.HandleMessage(ctx, mess, msg)
+	}
 	// msg := NewInMsg(ctx, update)
 	// for _, h := range mess.MessageHandlers {
 	// 	// fmt.Println("handling message", h)
 	// 	h.HandleMessage(ctx, mess, msg)
 	// }
-	// w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	// handle command
-	response := &interactions.InteractionResponse{
-		Type: interactions.ChannelMessageWithSource,
-		Data: &interactions.InteractionApplicationCommandCallbackData{
-			Content: "got your message kid",
-		},
-	}
-	gotils.WriteObject(w, http.StatusOK, response)
+	// response := &interactions.InteractionResponse{
+	// Type: interactions.AcknowledgeWithSource, // for long running commands
+	// Type: interactions.ChannelMessageWithSource, // for fast responses, can either return here or send within 3 seconds
+	// Data: &interactions.InteractionApplicationCommandCallbackData{
+	// 	Content: "got your message kid",
+	// },
+	// }
+	// gotils.WriteObject(w, http.StatusOK, response)
 
 	// var responsePayload bytes.Buffer
 	// err = json.NewEncoder(&responsePayload).Encode(response)
@@ -242,7 +301,6 @@ func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Req
 	// 	http.Error(w, "error responding", http.StatusInternalServerError)
 	// 	return
 	// }
-	// RETURN A TYPE 5 here or something, OR just return the response with a type 4
 
 	// w.WriteHeader(http.StatusOK)
 	fmt.Println("OK")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/treeder/messengers"
@@ -29,6 +30,9 @@ func (m *InMsg) ID() string {
 
 func (m *InMsg) Command() string {
 	return m.cmd
+}
+func (m *InMsg) IsSlashCommand() bool {
+	return strings.HasPrefix(m.FullText(), "/")
 }
 
 func (m *InMsg) ChatID() string {

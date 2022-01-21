@@ -2,6 +2,7 @@ package discord
 
 import (
 	"context"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/treeder/gotils/v2"
@@ -25,6 +26,11 @@ func (m *InMsg) ID() string {
 func (m *InMsg) Command() string {
 	return m.cmd
 }
+
+func (m *InMsg) IsSlashCommand() bool {
+	return strings.HasPrefix(m.FullText(), "/")
+}
+
 func (m *InMsg) TeamID() string {
 	return m.Msg.GuildID
 }
