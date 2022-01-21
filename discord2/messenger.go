@@ -259,9 +259,9 @@ func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Req
 		t = "/" + data.Data.Name + " " + t
 		cmd, tsplit = messengers.ParseCommand(ctx, t)
 	}
-	if cmd == "balance2" {
-		cmd = "balance"
-	}
+	// if cmd == "betabalance" {
+	// 	cmd = "balance"
+	// }
 	msg := &InMsg{
 		Msg:   data,
 		cmd:   cmd,
