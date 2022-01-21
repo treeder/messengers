@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bsdlp/discord-interactions-go/interactions"
 	"github.com/bwmarrin/discordgo"
+	"github.com/treeder/discord-interactions-go/interactions"
 	"github.com/treeder/gotils/v2"
 	"github.com/treeder/messengers"
 	"github.com/treeder/messengers/models"
@@ -26,6 +26,7 @@ type DiscordMessenger struct {
 	ClientID         string
 	PublicKey        string
 	decodedPublicKey []byte
+	token            string
 	// messageHandlers []messengers.MessageHandler
 	*messengers.BaseMessenger
 	baseCtx context.Context
@@ -263,6 +264,7 @@ func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Req
 	// 	cmd = "balance"
 	// }
 	msg := &InMsg{
+		mess:  mess,
 		Msg:   data,
 		cmd:   cmd,
 		split: tsplit,

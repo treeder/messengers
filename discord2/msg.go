@@ -2,16 +2,23 @@ package discord
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
-	"github.com/bsdlp/discord-interactions-go/interactions"
+	"github.com/treeder/discord-interactions-go/interactions"
+	"github.com/treeder/gotils/v2"
 	"github.com/treeder/messengers"
 )
 
 type InMsg struct {
-	Msg   interactions.Data
-	cmd   string
-	split []string
-	ctx   context.Context
+	mess           *DiscordMessenger
+	Msg            interactions.Data
+	cmd            string
+	split          []string
+	ctx            context.Context
+	mutex          sync.Mutex
+	checkedPrivate bool
+	private        bool
 }
 
 func (m *InMsg) ID() string {
@@ -47,8 +54,31 @@ func (m *InMsg) Cmd() string {
 func (m *InMsg) Split() []string {
 	return m.split
 }
+
 func (m *InMsg) IsPrivate() bool {
-	return false
+	if m.checkedPrivate {
+		return m.private
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	fmt.Println("discord.Msg.IsPrivate")
+
+	fmt.Println("m.Msg.User:", m.Msg.User)
+	req := &ChannelRequest{
+		RecipientID: m.Msg.User.ID,
+	}
+	resp := &Channel{}
+	err := gotils.PostJSONOpts(apiBaseURL+"/users/@me/channels", req, resp, &gotils.RequestOptions{
+		Headers: map[string]string{"Authorization": fmt.Sprintf("Bot %v", m.mess.token)},
+	})
+	if err != nil {
+		gotils.L(m.ctx).Info().Println("error getting channel:", err)
+		return false
+	}
+	fmt.Printf("CHANNEL: %v %+v\n", resp, m.ChatID())
+	return resp.ID == m.ChatID()
+
 	// var err error
 	// if m.channel == nil {
 	// 	m.channel, err = m.sess.Channel(m.Msg.ChannelID)
@@ -62,6 +92,7 @@ func (m *InMsg) IsPrivate() bool {
 	// }
 	// m.Msg.ChannelID
 	// return m.channel.Type == discordgo.ChannelTypeDM
+	// return true
 }
 
 func (m *InMsg) Mention() string {

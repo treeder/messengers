@@ -21,6 +21,7 @@ func New(ctx context.Context, clientID, publicKey, clientSecret, token string) (
 		ClientID:         clientID,
 		PublicKey:        publicKey,
 		decodedPublicKey: discordPubkey,
+		token:            token,
 		baseCtx:          ctx,
 	}
 	return mess, nil
