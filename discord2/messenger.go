@@ -1,7 +1,6 @@
 package discord
 
 import (
-	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
@@ -63,21 +62,50 @@ func (m *DiscordMessenger) SendMsg(ctx context.Context, in messengers.IncomingMe
 		},
 	}
 
+	if opts != nil {
+		b, ok := opts["isYesNo"]
+		if ok && b.(bool) {
+			// todo: create a function for this, like "AddComponent"
+			actionRow := interactions.Component{
+				Type: interactions.ActionRow,
+			}
+			actionRow.Components = append(actionRow.Components, interactions.Component{
+				Type:     interactions.Button,
+				Style:    interactions.Success,
+				Label:    "Yes",
+				CustomID: "yes",
+			})
+			actionRow.Components = append(actionRow.Components, interactions.Component{
+				Type:     interactions.Button,
+				Style:    interactions.Secondary,
+				Label:    "No",
+				CustomID: "no",
+			})
+			response.Data.Components = append(response.Data.Components, actionRow)
+		}
+	}
+
 	msg := in.(*InMsg)
 
-	var responsePayload bytes.Buffer
-	err := json.NewEncoder(&responsePayload).Encode(response)
+	err := gotils.PostJSON(msg.Msg.ResponseURL(), response, nil)
 	if err != nil {
-		gotils.L(ctx).Error().Printf("error encoding json: %v", err)
-		// http.Error(w, "error encoding json", http.StatusInternalServerError)
+		gotils.L(ctx).Error().Printf("error on gotils.PostJSON json: %v", err)
 		return msg, err
 	}
-	_, err = http.Post(msg.Msg.ResponseURL(), "application/json", &responsePayload)
-	if err != nil {
-		gotils.L(ctx).Error().Printf("error writing pong: %v", err)
-		// http.Error(w, "error responding", http.StatusInternalServerError)
-		return msg, err
-	}
+
+	// var responsePayload bytes.Buffer
+	// err := json.NewEncoder(&responsePayload).Encode(response)
+	// if err != nil {
+	// 	gotils.L(ctx).Error().Printf("error encoding json: %v", err)
+	// 	// http.Error(w, "error encoding json", http.StatusInternalServerError)
+	// 	return msg, err
+	// }
+	// _, err = http.Post(msg.Msg.ResponseURL(), "application/json", &responsePayload)
+	// if err != nil {
+	// 	gotils.L(ctx).Error().Printf("error writing pong: %v", err)
+	// 	// http.Error(w, "error responding", http.StatusInternalServerError)
+	// 	return msg, err
+	// }
 	return msg, nil
 	// return m.SendMsgTo(ctx, in.ChatID(), text, opts)
 }
@@ -130,6 +158,12 @@ func (m *DiscordMessenger) makeEmbed(text string, opts messengers.SendOpts) *dis
 
 func (m *DiscordMessenger) SendError(ctx context.Context, in messengers.IncomingMessage, err error) (messengers.Message, error) {
 	return m.SendMsg(ctx, in, err.Error(), nil)
+}
+
+func (m *DiscordMessenger) SendMsgMulti(ctx context.Context, in messengers.IncomingMessage, text []string, opts messengers.SendOpts) (messengers.Message, error) {
+	// discord commands don't work with multiple messages, so need to only send one.
+	s := strings.Join(text, "\n\n")
+	return m.SendMsg(ctx, in, s, opts)
 }
 
 func (m *DiscordMessenger) EditMsg(ctx context.Context, in messengers.Message, text string, opts messengers.SendOpts) (messengers.Message, error) {
@@ -255,14 +289,17 @@ func (mess *DiscordMessenger) HandleEventHTTP(w http.ResponseWriter, r *http.Req
 	}
 	cmd := data.Data.Name
 	tsplit := []string{}
-	if len(data.Data.Options) > 0 {
-		t := data.Data.Options[0].Value.(string)
-		t = "/" + data.Data.Name + " " + t
-		cmd, tsplit = messengers.ParseCommand(ctx, t)
+	if data.Type == interactions.MessageComponent {
+		// eg: user clicked a button
+		cmd = data.Data.CustomID
+	} else {
+		if len(data.Data.Options) > 0 {
+			t := data.Data.Options[0].Value.(string)
+			t = "/" + data.Data.Name + " " + t
+			cmd, tsplit = messengers.ParseCommand(ctx, t)
+		}
 	}
-	// if cmd == "betabalance" {
-	// 	cmd = "balance"
-	// }
+	fmt.Println("CMD:", cmd)
 	msg := &InMsg{
 		mess:  mess,
 		Msg:   data,

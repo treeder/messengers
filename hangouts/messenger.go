@@ -70,6 +70,18 @@ func (m *HangoutsMessenger) SendMsg(ctx context.Context, in messengers.IncomingM
 	return &Msg{Msg: res}, nil
 }
 
+func (m *HangoutsMessenger) SendMsgMulti(ctx context.Context, in messengers.IncomingMessage, text []string, opts messengers.SendOpts) (messengers.Message, error) {
+	var msg messengers.Message
+	var err error
+	for _, s := range text {
+		msg, err = m.SendMsg(ctx, in, s, opts)
+		if err != nil {
+			return msg, err
+		}
+	}
+	return msg, nil
+}
+
 func (m *HangoutsMessenger) SendMsgTo(ctx context.Context, chatID, text string, opts messengers.SendOpts) (messengers.Message, error) {
 	if opts == nil {
 		opts = messengers.SendOpts{}

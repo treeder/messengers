@@ -67,6 +67,18 @@ func (mess *TelegramMessenger) SendMsg(ctx context.Context, in messengers.Incomi
 	return mess.SendMsgTo(ctx, in.ChatID(), text, opts)
 }
 
+func (m *TelegramMessenger) SendMsgMulti(ctx context.Context, in messengers.IncomingMessage, text []string, opts messengers.SendOpts) (messengers.Message, error) {
+	var msg messengers.Message
+	var err error
+	for _, s := range text {
+		msg, err = m.SendMsg(ctx, in, s, opts)
+		if err != nil {
+			return msg, err
+		}
+	}
+	return msg, nil
+}
+
 func (mess *TelegramMessenger) SendMsgTo(ctx context.Context, chatID, text string, opts messengers.SendOpts) (messengers.Message, error) {
 	if opts == nil {
 		opts = messengers.SendOpts{}

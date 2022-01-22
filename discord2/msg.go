@@ -3,6 +3,7 @@ package discord
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/treeder/discord-interactions-go/interactions"
@@ -40,13 +41,18 @@ func (m *InMsg) ChatID() string {
 }
 
 func (m *InMsg) FromID() string {
-	return m.Msg.Member.User.ID
+	s := m.Msg.Member.User.ID // from a guild/server
+	if s == "" {
+		// then could be DM
+		s = m.Msg.User.ID
+	}
+	return s
 }
 func (m *InMsg) FromUsername() string {
 	return m.Msg.Member.User.Username
 }
 func (m *InMsg) FullText() string {
-	return "NO IDEA" //m.Msg.Content
+	return fmt.Sprintf("%v %v", m.Cmd(), strings.Join(m.split, " "))
 }
 func (m *InMsg) Cmd() string {
 	return m.Command()

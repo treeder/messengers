@@ -32,6 +32,7 @@ type Messenger interface {
 	// Name returns the name of the messenger, eg: telegram, discord
 	Name() string
 	SendMsg(ctx context.Context, in IncomingMessage, text string, opts SendOpts) (Message, error)
+	SendMsgMulti(ctx context.Context, in IncomingMessage, text []string, opts SendOpts) (Message, error)
 	SendMsgTo(ctx context.Context, chatID, text string, opts SendOpts) (Message, error)
 	SendMsgToUser(ctx context.Context, su *models.ServiceUser, text string, opts SendOpts) (Message, error)
 	EditMsg(ctx context.Context, toEdit Message, text string, opts SendOpts) (Message, error)
@@ -76,7 +77,7 @@ func (mess *BaseMessenger) AddHandler(ctx context.Context, h MessageHandler) {
 // }
 
 type SendOpts map[string]interface {
-	// Map map[string]interface{}
+	
 }
 
 // func NewSendOpts(m map[string]interface{}){

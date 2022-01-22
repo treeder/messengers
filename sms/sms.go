@@ -47,6 +47,18 @@ func (mess *SMSMessenger) SendMsg(ctx context.Context, in messengers.IncomingMes
 	})
 }
 
+func (m *SMSMessenger) SendMsgMulti(ctx context.Context, in messengers.IncomingMessage, text []string, opts messengers.SendOpts) (messengers.Message, error) {
+	var msg messengers.Message
+	var err error
+	for _, s := range text {
+		msg, err = m.SendMsgTo(ctx, in.ChatID(), s, opts)
+		if err != nil {
+			return msg, err
+		}
+	}
+	return msg, nil
+}
+
 // SendMsgTo requires a from phone number in the options. SMS works differently than the rest, so had to add
 // that.
 func (mess *SMSMessenger) SendMsgTo(ctx context.Context, chatID, text string, opts messengers.SendOpts) (messengers.Message, error) {

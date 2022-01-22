@@ -51,6 +51,17 @@ func (m *DiscordMessenger) ChatInfo(ctx context.Context, in messengers.IncomingM
 func (m *DiscordMessenger) SendMsg(ctx context.Context, in messengers.IncomingMessage, text string, opts messengers.SendOpts) (messengers.Message, error) {
 	return m.SendMsgTo(ctx, in.ChatID(), text, opts)
 }
+func (m *DiscordMessenger) SendMsgMulti(ctx context.Context, in messengers.IncomingMessage, text []string, opts messengers.SendOpts) (messengers.Message, error) {
+	var msg messengers.Message
+	var err error
+	for _, s := range text {
+		msg, err = m.SendMsgTo(ctx, in.ChatID(), s, opts)
+		if err != nil {
+			return msg, err
+		}
+	}
+	return msg, nil
+}
 
 func (m *DiscordMessenger) SendMsgTo(ctx context.Context, chatID, text string, opts messengers.SendOpts) (messengers.Message, error) {
 	if opts == nil {
