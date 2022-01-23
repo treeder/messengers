@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bsdlp/discord-interactions-go/interactions"
+	"github.com/treeder/discord-interactions-go/interactions"
 	"github.com/bwmarrin/discordgo"
 	"github.com/treeder/gotils/v2"
 	"github.com/treeder/messengers"
