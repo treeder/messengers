@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"encoding/hex"
 
 	"github.com/bwmarrin/discordgo"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -21,7 +22,7 @@ var (
 
 // New creates new discord bot client
 // todo: do we need the clientid and secret??  remove if not
-func New(ctx context.Context, clientIDIn, clientSecret, token string) (*DiscordMessenger, error) {
+func New(ctx context.Context, clientIDIn, publicKey, clientSecret, token string) (*DiscordMessenger, error) {
 	clientID = clientIDIn
 
 	// Create a new Discord session using the provided bot token.
@@ -36,10 +37,18 @@ func New(ctx context.Context, clientIDIn, clientSecret, token string) (*DiscordM
 	// 	return nil, err
 	// }
 	// fmt.Printf("APP: %+v", discordApp)
+	hexEncodedDiscordPubkey := publicKey
+	discordPubkey, err := hex.DecodeString(hexEncodedDiscordPubkey)
+	if err != nil {
+		return nil, err
+	}
+
 	mess := &DiscordMessenger{
 		BaseMessenger: &messengers.BaseMessenger{},
 		sess:          dg,
 		ClientID:      clientID,
+		PublicKey:     publicKey,
+		decodedPublicKey: discordPubkey,
 		baseCtx:       ctx,
 	}
 

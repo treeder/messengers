@@ -70,6 +70,10 @@ func (m *Msg) Command() string {
 	return m.cmd
 }
 
+func (m *Msg) IsSlashCommand() bool {
+	return strings.HasPrefix(m.FullText(), "/")
+}
+
 func (m *Msg) ChatID() string {
 	// return strings.TrimPrefix(m.Msg.Space.Name, "spaces/")
 	return m.Msg.Space.Name

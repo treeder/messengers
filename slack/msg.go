@@ -126,6 +126,9 @@ func (m *Msg) ID() string {
 func (m *Msg) Command() string {
 	return m.cmd
 }
+func (m *Msg) IsSlashCommand() bool {
+	return strings.HasPrefix(m.FullText(), "/")
+}
 
 func (m *Msg) ChatID() string {
 	if m.chatID != "" {

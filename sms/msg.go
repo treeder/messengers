@@ -1,6 +1,8 @@
 package sms
 
 import (
+	"strings"
+
 	"github.com/sfreiberg/gotwilio"
 	"github.com/treeder/messengers"
 )
@@ -17,6 +19,9 @@ func (m *Message) Cmd() string {
 }
 func (m *Message) Command() string {
 	return m.Cmd()
+}
+func (m *Message) IsSlashCommand() bool {
+	return strings.HasPrefix(m.FullText(), "/")
 }
 
 func (m *Message) FullText() string {

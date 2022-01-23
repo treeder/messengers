@@ -56,6 +56,17 @@ func (m *SlackMessenger) SendMsg(ctx context.Context, in messengers.IncomingMess
 	opts["threadID"] = in2.ThreadID()
 	return m.SendMsgTo(ctx, in.ChatID(), text, opts)
 }
+func (m *SlackMessenger) SendMsgMulti(ctx context.Context, in messengers.IncomingMessage, text []string, opts messengers.SendOpts) (messengers.Message, error) {
+	var msg messengers.Message
+	var err error
+	for _, s := range text {
+		msg, err = m.SendMsg(ctx, in, s, opts)
+		if err != nil {
+			return msg, err
+		}
+	}
+	return msg, nil
+}
 
 func (m *SlackMessenger) SlackClient(ctx context.Context) *slack.Client {
 	team := ctx.Value("team").(*models.Team)

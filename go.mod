@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	cloud.google.com/go/firestore v1.6.1
+	github.com/bsdlp/discord-interactions-go v0.0.0-20201227083222-a2ba84473ce8
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/matoous/go-nanoid/v2 v2.0.0
