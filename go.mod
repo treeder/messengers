@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	cloud.google.com/go/firestore v1.6.1
-	github.com/treeder/discord-interactions-go v0.0.0-20201227083222-a2ba84473ce8
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/matoous/go-nanoid/v2 v2.0.0
@@ -12,6 +11,7 @@ require (
 	github.com/rs/xid v1.3.0
 	github.com/sfreiberg/gotwilio v0.0.0-20200916182813-169c4cd5c691
 	github.com/slack-go/slack v0.7.2
+	github.com/treeder/discord-interactions-go v0.0.1
 	github.com/treeder/firetils v0.0.27
 	github.com/treeder/gotils/v2 v2.0.12
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
@@ -25,13 +25,7 @@ require (
 	cloud.google.com/go/iam v0.1.1 // indirect
 	cloud.google.com/go/storage v1.18.2 // indirect
 	firebase.google.com/go/v4 v4.7.1 // indirect
-	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cncf/udpa/go v0.0.0-20220112060539-c52dc94e7fbe // indirect
-	github.com/cncf/xds/go v0.0.0-20220121163655-4a2b9fdd466b // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/envoyproxy/go-control-plane v0.10.1 // indirect
-	github.com/envoyproxy/protoc-gen-validate v0.6.3 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
