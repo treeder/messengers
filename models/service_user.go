@@ -9,8 +9,9 @@ import (
 // ServiceUser user info for each service, eg: Telegram
 // can't be a sub collection because you wouldn't know the main User ID (above)
 type ServiceUser struct {
-	firetils.Timestamped
 	firetils.Firestored
+	firetils.IDed
+	firetils.Timestamped
 
 	// ID the user ID for the service, NOT the firestore ID
 	ID string `firestore:"id"`

@@ -4,6 +4,7 @@ import "github.com/treeder/firetils"
 
 type Team struct {
 	firetils.Firestored
+	firetils.IDed
 	firetils.Timestamped
 	Service        string `firestore:"service"`    // only a team service
 	ServiceID      string `firestore:"service_id"` // The teams ID for the service
