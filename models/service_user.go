@@ -34,6 +34,9 @@ type ServiceUser struct {
 	CountTx int64 `firestore:"count_tx"`
 	// SumSent total ever sent in wei
 	SumSent string `firestore:"sum_sent"`
+	
+	OauthToken  string `firestore:"oauthToken" json:"-"`
+	OauthSecret string `firestore:"oauthSecret" json:"-"`
 }
 
 func (su *ServiceUser) Network() string {
