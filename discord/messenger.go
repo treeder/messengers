@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/treeder/discord-interactions-go/interactions"
 	"github.com/bwmarrin/discordgo"
+	"github.com/treeder/discord-interactions-go/interactions"
 	"github.com/treeder/gotils/v2"
 	"github.com/treeder/messengers"
 	"github.com/treeder/messengers/models"
@@ -21,7 +21,6 @@ type DiscordMessenger struct {
 	ClientID         string
 	PublicKey        string
 	decodedPublicKey []byte
-	// messageHandlers []messengers.MessageHandler
 	*messengers.BaseMessenger
 	baseCtx context.Context
 }

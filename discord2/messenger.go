@@ -26,7 +26,6 @@ type DiscordMessenger struct {
 	PublicKey        string
 	decodedPublicKey []byte
 	token            string
-	// messageHandlers []messengers.MessageHandler
 	*messengers.BaseMessenger
 	baseCtx context.Context
 }

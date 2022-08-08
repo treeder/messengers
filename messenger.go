@@ -49,6 +49,9 @@ type Messenger interface {
 	Link(text, url string) string
 	HelpMsgAddToGroup() string
 
+	// HasPrivate if the messaging system has DMs
+	HasPrivate() bool
+
 	// if needed to shut down
 	Close()
 
@@ -72,12 +75,15 @@ func (mess *BaseMessenger) AddHandler(ctx context.Context, h MessageHandler) {
 	// fmt.Printf("handler slice after: %+v\n", mess.MessageHandlers)
 }
 
+func (mess *BaseMessenger) HasPrivate() bool {
+	return true
+}
+
 // func (mess *BaseMessenger) AddHandlerRaw(ctx context.Context, h MessageHandler) {
 // 	mess.messageHandlers = append(mess.messageHandlers, h)
 // }
 
 type SendOpts map[string]interface {
-	
 }
 
 // func NewSendOpts(m map[string]interface{}){
