@@ -9,7 +9,7 @@ import (
 type User struct {
 	firetils.Firestored
 	firetils.IDed
-	firetils.TimeStamped
+	firetils.Timestamped
 
 	// WARNING: before adding new fields here, be sure they can be public, this is returned in the get user endpoint
 
